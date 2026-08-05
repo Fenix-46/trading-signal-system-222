@@ -1,4 +1,6 @@
 PyQt6>=6.6.0
+pyinstaller-hooks-contrib>=2024.0
+pyinstaller==6.21.0
 SQLAlchemy>=2.0.0
 pandas>=2.1.0
 numpy>=1.25.0
@@ -11,4 +13,3 @@ pyqtgraph>=0.13.3
 matplotlib>=3.8.0
 requests>=2.31.0
 Pillow>=10.1.0
-pyinstaller>=6.3.0
