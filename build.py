@@ -62,7 +62,8 @@ def build():
     for hi in hidden_imports:
         cmd.append(f"--hidden-import={hi}")
 
-    collect_all = ["telegram", "ccxt"]
+    # Ensure PyQt6 resources are collected by PyInstaller
+    collect_all = ["telegram", "ccxt", "PyQt6"]
     for c in collect_all:
         cmd.append(f"--collect-all={c}")
 
