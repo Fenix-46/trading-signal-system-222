@@ -1,0 +1,5 @@
+from strategies.base_strategy import BaseStrategy
+from strategies.scalping_strategy import ScalpingStrategy
+from strategies.day_trading_strategy import DayTradingStrategy
+from strategies.swing_trading_strategy import SwingTradingStrategy
+from strategies.trend_following_strategy import TrendFollowingStrategy

@@ -1,0 +1,4 @@
+from tests.test_strategies import TestStrategies
+from tests.test_indicators import TestIndicators
+from tests.test_risk_manager import TestRiskManager
+from tests.test_data_fetcher import TestDataFetcher
