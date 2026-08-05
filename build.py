@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build script for creating executable with PyInstaller.
 
-Updated to add a local hooks directory and ensure PyQt6.sip is included in hidden imports.
+Updated to add a local hooks directory and ensure PyQt6.sip and sqlalchemy are included in hidden imports/collections.
 """
 import os
 import sys
@@ -54,7 +54,9 @@ def build():
         "PyQt6.QtGui",
         "PyQt6.sip",
         "sqlalchemy",
-        "sqlalchemy.sql.default_comparator",
+        "sqlalchemy.orm",
+        "sqlalchemy.ext.declarative",
+        "sqlalchemy.sql",
         "pandas",
         "numpy",
         "ccxt",
@@ -67,12 +69,12 @@ def build():
     for hi in hidden_imports:
         cmd.append(f"--hidden-import={hi}")
 
-    # Ensure PyQt6 and other packages resources are collected by PyInstaller
-    collect_all = ["telegram", "ccxt", "PyQt6"]
+    # Ensure PyQt6, sqlalchemy and other packages resources are collected by PyInstaller
+    collect_all = ["telegram", "ccxt", "PyQt6", "sqlalchemy", "pandas"]
     for c in collect_all:
         cmd.append(f"--collect-all={c}")
 
-    # Add local hooks directory so our custom hook-PyQt6.py is used
+    # Add local hooks directory so our custom hooks are used
     cmd.append("--additional-hooks-dir=hooks")
 
     cmd.append("main.py")
