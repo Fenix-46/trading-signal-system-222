@@ -1,33 +1,45 @@
-steps:
-- name: Checkout repository
-  uses: actions/checkout@v4
+name: Build Windows EXE
 
-- name: Set up Python
-  uses: actions/setup-python@v5
-  with:
-    python-version: '3.11'
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
-- name: Install dependencies (verbose + PyQt6 binary)
-  run: |
-    python -m pip install --upgrade pip
-    echo "Installing requirements.txt (verbose)"
-    pip install -r requirements.txt --verbose
-    echo "Explicitly ensure PyQt6 binary wheel is installed"
-    pip install --upgrade --only-binary=:all: PyQt6
-    echo "Install PyInstaller"
-    pip install pyinstaller pyinstaller-hooks-contrib
-    echo "Installed packages:"
-    pip list
-    echo "Python and PyQt6 check"
-    python -c "import sys; print('Python', sys.version)"
-    python -c "import importlib, sys; importlib.invalidate_caches(); import PyQt6; print('PyQt6 import OK:', getattr(PyQt6, '__version__', 'unknown'))"
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-- name: Build EXE with PyInstaller
-  run: |
-    python build.py
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-- name: Upload Artifact
-  uses: actions/upload-artifact@v4
-  with:
-    name: TradingSignalSystem-EXE
-    path: dist/*.exe
+      - name: Install dependencies (verbose + PyQt6 binary)
+        run: |
+          python -m pip install --upgrade pip
+          echo "Installing requirements.txt (verbose)"
+          pip install -r requirements.txt --verbose
+          echo "Explicitly ensure PyQt6 binary wheel is installed"
+          pip install --upgrade --only-binary=:all: PyQt6
+          echo "Install PyInstaller"
+          pip install pyinstaller pyinstaller-hooks-contrib
+          echo "Installed packages:"
+          pip list
+          echo "Python and PyQt6 check"
+          python -c "import sys; print('Python', sys.version)"
+          python -c "import importlib, sys; importlib.invalidate_caches(); import PyQt6; print('PyQt6 import OK:', getattr(PyQt6, '__version__', 'unknown'))"
+
+      - name: Build EXE with PyInstaller
+        run: |
+          python build.py
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TradingSignalSystem-EXE
+          path: dist/*.exe
