@@ -19,40 +19,65 @@ def build():
             shutil.rmtree(dir_name)
 
     # Platform-correct separator for PyInstaller --add-data (':' on POSIX, ';' on Windows)
-    add_data = f"resources{os.pathsep}resources"
+    add_data = None
+    resources_dir = "resources"
+    if os.path.isdir(resources_dir):
+        add_data = f"{resources_dir}{os.pathsep}{resources_dir}"
+    else:
+        print(f"Warning: resources directory '{resources_dir}' not found — skipping --add-data")
 
-    # Build command
-    cmd = [
-        sys.executable, "-m", "PyInstaller",
-        "--onefile",
-        "--windowed",
-        "--name=TradingSignalSystem",
-        "--icon=resources/icon.ico",
-        f"--add-data={add_data}",
-        "--hidden-import=PyQt6",
-        "--hidden-import=PyQt6.QtWidgets",
-        "--hidden-import=PyQt6.QtCore",
-        "--hidden-import=PyQt6.QtGui",
-        "--hidden-import=sqlalchemy",
-        "--hidden-import=sqlalchemy.sql.default_comparator",
-        "--hidden-import=pandas",
-        "--hidden-import=numpy",
-        "--hidden-import=ccxt",
-        "--hidden-import=yfinance",
-        "--hidden-import=telegram",
-        "--hidden-import=apscheduler",
-        "--hidden-import=matplotlib",
-        "--hidden-import=pyqtgraph",
-        "--collect-all=telegram",
-        "--collect-all=ccxt",
-        "main.py"
+    # Icon (optional)
+    icon_path = os.path.join(resources_dir, "icon.ico")
+    icon_flag = None
+    if os.path.isfile(icon_path):
+        icon_flag = f"--icon={icon_path}"
+    else:
+        print(f"Warning: icon file '{icon_path}' not found — will build without custom icon")
+
+    # Build command pieces
+    cmd = [sys.executable, "-m", "PyInstaller", "--onefile", "--windowed", "--name=TradingSignalSystem"]
+
+    if icon_flag:
+        cmd.append(icon_flag)
+
+    if add_data:
+        cmd.append(f"--add-data={add_data}")
+
+    hidden_imports = [
+        "PyQt6",
+        "PyQt6.QtWidgets",
+        "PyQt6.QtCore",
+        "PyQt6.QtGui",
+        "sqlalchemy",
+        "sqlalchemy.sql.default_comparator",
+        "pandas",
+        "numpy",
+        "ccxt",
+        "yfinance",
+        "telegram",
+        "apscheduler",
+        "matplotlib",
+        "pyqtgraph",
     ]
+    for hi in hidden_imports:
+        cmd.append(f"--hidden-import={hi}")
+
+    collect_all = ["telegram", "ccxt"]
+    for c in collect_all:
+        cmd.append(f"--collect-all={c}")
+
+    cmd.append("main.py")
 
     print("\nRunning PyInstaller...")
     print(f"Command: {' '.join(cmd)}\n")
 
-    # Capture output so we print full logs into Actions output
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        # Capture output so we print full logs into Actions output
+        result = subprocess.run(cmd, capture_output=True, text=True)
+    except FileNotFoundError as e:
+        print("Failed to run PyInstaller: executable not found.")
+        print(str(e))
+        sys.exit(1)
 
     # Always print stdout/stderr so CI logs contain the full PyInstaller output
     if result.stdout:
