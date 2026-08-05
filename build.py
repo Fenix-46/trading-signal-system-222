@@ -1,5 +1,5 @@
+#!/usr/bin/env python3
 """Build script for creating executable with PyInstaller."""
-
 import os
 import sys
 import subprocess
@@ -18,6 +18,9 @@ def build():
             print(f"Cleaning {dir_name}...")
             shutil.rmtree(dir_name)
 
+    # Platform-correct separator for PyInstaller --add-data (':' on POSIX, ';' on Windows)
+    add_data = f"resources{os.pathsep}resources"
+
     # Build command
     cmd = [
         sys.executable, "-m", "PyInstaller",
@@ -25,7 +28,7 @@ def build():
         "--windowed",
         "--name=TradingSignalSystem",
         "--icon=resources/icon.ico",
-        "--add-data=resources;resources",
+        f"--add-data={add_data}",
         "--hidden-import=PyQt6",
         "--hidden-import=PyQt6.QtWidgets",
         "--hidden-import=PyQt6.QtCore",
@@ -48,7 +51,16 @@ def build():
     print("\nRunning PyInstaller...")
     print(f"Command: {' '.join(cmd)}\n")
 
-    result = subprocess.run(cmd, capture_output=False)
+    # Capture output so we print full logs into Actions output
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    # Always print stdout/stderr so CI logs contain the full PyInstaller output
+    if result.stdout:
+        print("=== PyInstaller stdout ===")
+        print(result.stdout)
+    if result.stderr:
+        print("=== PyInstaller stderr ===")
+        print(result.stderr)
 
     if result.returncode == 0:
         exe_path = os.path.join("dist", "TradingSignalSystem.exe")
@@ -61,9 +73,11 @@ def build():
             print("=" * 60)
         else:
             print("\nBuild completed but executable not found.")
+            sys.exit(1)
     else:
         print(f"\nBuild failed with return code: {result.returncode}")
-        sys.exit(1)
+        # exit with same code so Actions step is marked failed and logs are visible
+        sys.exit(result.returncode)
 
 
 if __name__ == "__main__":
