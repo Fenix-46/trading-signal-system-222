@@ -1,35 +1,30 @@
 #!/usr/bin/env python3
 """Build script for creating executable with PyInstaller.
 
-Updated to add a local hooks directory and ensure PyQt6.sip and sqlalchemy are included in hidden imports/collections.
+Includes hooks dir and collects sqlalchemy/pandas/PyQt6 resources.
 """
 import os
 import sys
 import subprocess
 import shutil
 
-
 def build():
-    """Build the application into a single executable."""
     print("=" * 60)
     print("Building Trading Signal System...")
     print("=" * 60)
 
-    # Clean previous builds
     for dir_name in ["build", "dist"]:
         if os.path.exists(dir_name):
             print(f"Cleaning {dir_name}...")
             shutil.rmtree(dir_name)
 
-    # Platform-correct separator for PyInstaller --add-data (':' on POSIX, ';' on Windows)
-    add_data = None
     resources_dir = "resources"
+    add_data = None
     if os.path.isdir(resources_dir):
         add_data = f"{resources_dir}{os.pathsep}{resources_dir}"
     else:
         print(f"Warning: resources directory '{resources_dir}' not found — skipping --add-data")
 
-    # Icon (optional)
     icon_path = os.path.join(resources_dir, "icon.ico")
     icon_flag = None
     if os.path.isfile(icon_path):
@@ -37,7 +32,6 @@ def build():
     else:
         print(f"Warning: icon file '{icon_path}' not found — will build without custom icon")
 
-    # Build command pieces
     cmd = [sys.executable, "-m", "PyInstaller", "--onefile", "--windowed", "--name=TradingSignalSystem"]
 
     if icon_flag:
@@ -46,7 +40,6 @@ def build():
     if add_data:
         cmd.append(f"--add-data={add_data}")
 
-    # Hidden imports: explicitly include PyQt6.sip and other modules that sometimes are missed
     hidden_imports = [
         "PyQt6",
         "PyQt6.QtWidgets",
@@ -69,28 +62,23 @@ def build():
     for hi in hidden_imports:
         cmd.append(f"--hidden-import={hi}")
 
-    # Ensure PyQt6, sqlalchemy and other packages resources are collected by PyInstaller
     collect_all = ["telegram", "ccxt", "PyQt6", "sqlalchemy", "pandas"]
     for c in collect_all:
         cmd.append(f"--collect-all={c}")
 
-    # Add local hooks directory so our custom hooks are used
     cmd.append("--additional-hooks-dir=hooks")
-
     cmd.append("main.py")
 
     print("\nRunning PyInstaller...")
     print(f"Command: {' '.join(cmd)}\n")
 
     try:
-        # Capture output so we print full logs into Actions output
         result = subprocess.run(cmd, capture_output=True, text=True)
     except FileNotFoundError as e:
         print("Failed to run PyInstaller: executable not found.")
         print(str(e))
         sys.exit(1)
 
-    # Always print stdout/stderr so CI logs contain the full PyInstaller output
     if result.stdout:
         print("=== PyInstaller stdout ===")
         print(result.stdout)
@@ -103,7 +91,7 @@ def build():
         if os.path.exists(exe_path):
             size_mb = os.path.getsize(exe_path) / (1024 * 1024)
             print("\n" + "=" * 60)
-            print(f"BUILD SUCCESSFUL!")
+            print("BUILD SUCCESSFUL!")
             print(f"Executable: {exe_path}")
             print(f"Size: {size_mb:.1f} MB")
             print("=" * 60)
@@ -112,9 +100,7 @@ def build():
             sys.exit(1)
     else:
         print(f"\nBuild failed with return code: {result.returncode}")
-        # exit with same code so Actions step is marked failed and logs are visible
         sys.exit(result.returncode)
-
 
 if __name__ == "__main__":
     build()
