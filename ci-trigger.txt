@@ -1,0 +1,3 @@
+Trigger CI run: updating a file to trigger the workflow.
+
+This file was added by Copilot to trigger the GitHub Actions workflow after fixing build.py to guard missing resources.
